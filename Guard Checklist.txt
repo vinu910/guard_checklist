@@ -287,7 +287,7 @@
     <div class="grid">
       <div class="field">
         <label>Material Name</label>
-        <input type="text" id="materialName" placeholder="Kya le ja rahe hain">
+        <input type="text" id="materialName" placeholder="Material">
       </div>
       <div class="field">
         <label>Quantity</label>
