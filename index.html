@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vehicle Entry Checklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0c1830;
+    --navy:#16274d;
+    --navy-mid:#1f3a68;
+    --paper:#f4f1e8;
+    --amber:#f0a400;
+    --amber-dark:#c97f00;
+    --line:#d9d3c1;
+    --ok:#1f7a4d;
+    --err:#b3271e;
+    --text:#1a1f2b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      repeating-linear-gradient(135deg, rgba(22,39,77,0.035) 0 18px, transparent 18px 36px);
+    font-family:'Inter',sans-serif;
+    color:var(--text);
+    min-height:100vh;
+    padding:16px 12px 100px;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:820px;margin:0 auto;}
+
+  /* Gate / barrier header */
+  .gate{
+    background:var(--navy-deep);
+    border-radius:10px;
+    padding:0;
+    overflow:hidden;
+    box-shadow:0 12px 30px rgba(12,24,48,0.35);
+    margin-bottom:28px;
+    border:2px solid var(--navy-deep);
+  }
+  .barrier{
+    height:14px;
+    background:repeating-linear-gradient(45deg, var(--amber) 0 22px, var(--navy-deep) 22px 44px);
+  }
+  .gate-inner{
+    padding:30px 28px 26px;
+    text-align:center;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.28em;
+    color:var(--amber);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    letter-spacing:.03em;
+    color:#fff;
+    font-size:clamp(26px,4.4vw,38px);
+    margin:0 0 6px;
+    text-transform:uppercase;
+  }
+  .sub{
+    color:#b9c3d8;
+    font-size:14px;
+    margin:0;
+  }
+
+  form{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    box-shadow:0 4px 18px rgba(12,24,48,0.06);
+  }
+  .section-label{
+    font-family:'Oswald',sans-serif;
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--amber-dark);
+    background:#fff7e8;
+    border-bottom:1px solid var(--line);
+    padding:12px 24px;
+    font-weight:600;
+  }
+  /* Mobile-first: single column by default */
+  .grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:0;
+  }
+  @media (min-width:640px){
+    .grid{grid-template-columns:1fr 1fr;}
+  }
+  .field{
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  @media (min-width:640px){
+    .field{padding:16px 24px;}
+  }
+  .field.full{grid-column:1 / -1;}
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.04em;
+    color:var(--navy);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  label .req{color:var(--err);margin-left:2px;}
+  input[type=text], input[type=tel], input[type=number], input[type=datetime-local], textarea, select{
+    width:100%;
+    padding:12px 12px;
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    font-family:'Inter',sans-serif;
+    font-size:16px; /* 16px+ stops iOS from auto-zooming on focus */
+    background:#fbfaf7;
+    color:var(--text);
+    transition:border-color .15s, background .15s;
+    min-height:46px;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2316274d' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    padding-right:34px;
+  }
+  #vehicleNo{font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
+  input:focus, textarea:focus, select:focus{
+    outline:none;
+    border-color:var(--navy-mid);
+    background:#fff;
+  }
+  textarea{resize:vertical;min-height:64px;}
+
+  /* Photo capture */
+  .photo-box{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .photo-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    padding:12px 18px;
+    border-radius:6px;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    letter-spacing:.02em;
+    min-height:46px;
+  }
+  .photo-btn:hover{background:var(--navy-mid);}
+  #photoPreview{
+    width:56px;height:56px;
+    border-radius:6px;
+    object-fit:cover;
+    border:1.5px solid var(--line);
+    display:none;
+  }
+  .photo-hint{font-size:12px;color:#7a8194;width:100%;margin-top:4px;}
+
+  .submit-row{
+    padding:20px 18px;
+    text-align:center;
+  }
+  @media (min-width:640px){
+    .submit-row{padding:22px 24px 26px;}
+  }
+  .submit-btn{
+    background:var(--amber);
+    color:var(--navy-deep);
+    border:none;
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    font-weight:700;
+    font-size:16px;
+    padding:14px 0;
+    width:100%;
+    max-width:340px;
+    border-radius:8px;
+    cursor:pointer;
+    box-shadow:0 6px 0 var(--amber-dark);
+    transition:transform .08s;
+    min-height:50px;
+  }
+  .submit-btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--amber-dark);}
+  .submit-btn:disabled{opacity:.6;cursor:not-allowed;}
+
+  .status{
+    text-align:center;
+    margin-top:14px;
+    font-size:14px;
+    font-weight:600;
+    min-height:20px;
+  }
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--err);}
+
+  .config-warning{
+    background:#fff3cd;
+    border:1px solid #f0c96a;
+    color:#7a5b00;
+    padding:12px 16px;
+    border-radius:6px;
+    font-size:13px;
+    margin-bottom:18px;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="gate">
+    <div class="barrier"></div>
+    <div class="gate-inner">
+      <div class="eyebrow">Security Checkpoint</div>
+      <h1>Vehicle Entry Checklist</h1>
+      <p class="sub">Fill karo aur submit dabao — data seedha Google Sheet (Sheet1) me chala jayega</p>
+    </div>
+    <div class="barrier"></div>
+  </div>
+
+  <div id="configWarning" class="config-warning" style="display:none;">
+    ⚠️ SCRIPT_URL set nahi hai. Neeche &lt;script&gt; me apna Apps Script Web App URL daalo (Code.gs setup steps dekho).
+  </div>
+
+  <form id="entryForm">
+    <div class="section-label">Entry Details</div>
+    <div class="grid">
+      <div class="field">
+        <label>Entry Date &amp; Time <span class="req">*</span></label>
+        <input type="datetime-local" id="entryDateTime" required>
+      </div>
+      <div class="field">
+        <label>Vehicle No. <span class="req">*</span></label>
+        <input type="text" id="vehicleNo" placeholder="HR-06-AB-1234" required>
+      </div>
+      <div class="field">
+        <label>Driver Name <span class="req">*</span></label>
+        <input type="text" id="driverName" placeholder="Pura naam" required>
+      </div>
+      <div class="field">
+        <label>Driver Mobile No. <span class="req">*</span></label>
+        <input type="tel" id="driverMobile" placeholder="10 digit number" pattern="[0-9]{10}" required>
+      </div>
+      <div class="field">
+        <label>Transporter Name</label>
+        <input type="text" id="transporterName" placeholder="Company / transporter">
+      </div>
+      <div class="field">
+        <label>Purpose</label>
+        <select id="purpose">
+          <option value="">Select karo</option>
+          <option>Delivery</option>
+          <option>Pickup</option>
+          <option>Return</option>
+          <option>Visitor</option>
+          <option>Maintenance</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-label">Material Info</div>
+    <div class="grid">
+      <div class="field">
+        <label>Material Name</label>
+        <input type="text" id="materialName" placeholder="Kya le ja rahe hain">
+      </div>
+      <div class="field">
+        <label>Quantity</label>
+        <input type="text" id="quantity" placeholder="e.g. 50 boxes">
+      </div>
+      <div class="field full">
+        <label>Damage / Issue</label>
+        <textarea id="damageIssue" placeholder="Agar koi damage ya issue dikhe to likho"></textarea>
+      </div>
+      <div class="field full">
+        <label>Remarks</label>
+        <textarea id="remarks" placeholder="Additional notes"></textarea>
+      </div>
+    </div>
+
+    <div class="section-label">Verified By</div>
+    <div class="grid">
+      <div class="field">
+        <label>Guard Name <span class="req">*</span></label>
+        <input type="text" id="guardName" placeholder="Duty guard ka naam" required>
+      </div>
+      <div class="field">
+        <label>Driver Photo</label>
+        <div class="photo-box">
+          <button type="button" class="photo-btn" id="photoTrigger">📷 Photo Capture / Upload</button>
+          <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+          <img id="photoPreview" alt="preview">
+        </div>
+        <div class="photo-hint">Photo Google Drive me save hoke sheet me link ban jayega</div>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button type="submit" class="submit-btn" id="submitBtn">Submit Entry</button>
+      <div class="status" id="statusMsg"></div>
+    </div>
+  </form>
+</div>
+
+<script>
+  // ====== YAHAN APNA APPS SCRIPT WEB APP URL PASTE KARO ======
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw13UJh_E2U5laAvnqVUqJFngafmQ2d0_xJ9PtXLoaUvFkMyOrqwnSEy4FwFZ0mPBAz/exec";
+  // =============================================================
+
+  if (SCRIPT_URL.indexOf("PASTE_YOUR") === 0) {
+    document.getElementById('configWarning').style.display = 'block';
+  }
+
+  // default entry datetime = now
+  const dtField = document.getElementById('entryDateTime');
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  dtField.value = now.toISOString().slice(0,16);
+
+  const photoTrigger = document.getElementById('photoTrigger');
+  const photoInput = document.getElementById('photoInput');
+  const photoPreview = document.getElementById('photoPreview');
+  let photoBase64 = "";
+  let photoName = "";
+  let photoMimeType = "";
+
+  photoTrigger.addEventListener('click', () => photoInput.click());
+
+  // Resize + compress photo in-browser before upload so submit stays fast
+  // on mobile data (large phone camera photos are 3-8 MB; this shrinks
+  // them to under ~250 KB without losing readability).
+  function compressImage(file, maxDimension, quality) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDimension) {
+          height = Math.round(height * (maxDimension / width));
+          width = maxDimension;
+        } else if (height >= width && height > maxDimension) {
+          width = Math.round(width * (maxDimension / height));
+          height = maxDimension;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  photoInput.addEventListener('change', async () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+    photoTrigger.textContent = "⏳ Processing...";
+    try {
+      const dataUrl = await compressImage(file, 1000, 0.7);
+      photoBase64 = dataUrl.split(',')[1];
+      photoName = (file.name || "driver_photo").replace(/\.[^.]+$/, "") + ".jpg";
+      photoMimeType = "image/jpeg";
+      photoPreview.src = dataUrl;
+      photoPreview.style.display = 'inline-block';
+    } catch (err) {
+      statusMsg.textContent = "Photo process nahi ho payi, dobara try karo.";
+      statusMsg.className = "status err";
+    } finally {
+      photoTrigger.textContent = "📷 Photo Capture / Upload";
+    }
+  });
+
+  const form = document.getElementById('entryForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusMsg = document.getElementById('statusMsg');
+
+  function setNowInField(){
+    dtField.value = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+  }
+
+  // Sends with a timeout + a couple of silent retries, since mobile
+  // networks drop requests sometimes. mode:'no-cors' means we can't read
+  // the response body, but a resolved fetch reliably means Google
+  // received the request.
+  function submitWithRetry(payload, attemptsLeft, timeoutMs){
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    return fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    })
+    .then(res => { clearTimeout(timer); return res; })
+    .catch(err => {
+      clearTimeout(timer);
+      if (attemptsLeft > 1) {
+        statusMsg.textContent = "Signal weak, dobara try ho raha hai...";
+        statusMsg.className = "status";
+        return submitWithRetry(payload, attemptsLeft - 1, timeoutMs);
+      }
+      throw err;
+    });
+  }
+
+  let isSubmitting = false;
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if (isSubmitting) return; // guards against double-tap on slow phones
+
+    if (SCRIPT_URL.indexOf("PASTE_YOUR") === 0) {
+      statusMsg.textContent = "Pehle SCRIPT_URL set karo (upar warning dekho).";
+      statusMsg.className = "status err";
+      return;
+    }
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    isSubmitting = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+    statusMsg.textContent = "";
+    statusMsg.className = "status";
+
+    const payload = {
+      entryDateTime: document.getElementById('entryDateTime').value,
+      vehicleNo: document.getElementById('vehicleNo').value.trim(),
+      driverName: document.getElementById('driverName').value.trim(),
+      driverMobile: document.getElementById('driverMobile').value.trim(),
+      transporterName: document.getElementById('transporterName').value.trim(),
+      purpose: document.getElementById('purpose').value,
+      materialName: document.getElementById('materialName').value.trim(),
+      quantity: document.getElementById('quantity').value.trim(),
+      damageIssue: document.getElementById('damageIssue').value.trim(),
+      remarks: document.getElementById('remarks').value.trim(),
+      guardName: document.getElementById('guardName').value.trim(),
+      photoBase64: photoBase64,
+      photoName: photoName,
+      photoMimeType: photoMimeType
+    };
+
+    submitWithRetry(payload, 3, 15000)
+      .then(() => {
+        statusMsg.textContent = "✅ Entry saved! Sheet1 me check karo.";
+        statusMsg.className = "status ok";
+        form.reset();
+        photoPreview.style.display = 'none';
+        photoBase64 = ""; photoName = ""; photoMimeType = "";
+        setNowInField();
+      })
+      .catch(err => {
+        statusMsg.textContent = "❌ Submit fail hua (" + (err.name === 'AbortError' ? 'timeout' : err.message) + "). Internet check karke dobara try karo.";
+        statusMsg.className = "status err";
+      })
+      .finally(() => {
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Entry";
+      });
+  });
+</script>
+</body>
+</html>
