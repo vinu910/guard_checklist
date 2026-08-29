@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Vehicle Entry Checklist</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -216,13 +219,16 @@
     <div class="section-label">Permit &amp; Issue</div>
     <div class="grid">
       <div class="field">
-        <label>Permit</label>
+        <label>Permit Hai?</label>
         <div class="yesno">
-          <label class="no-variant"><input type="radio" name="permit" value="Expire" checked> Expire</label>
-          <label><input type="radio" name="permit" value="Not Expire"> Not Expire (Photo)</label>
+          <label class="no-variant"><input type="radio" name="permit" value="No" checked> No</label>
+          <label><input type="radio" name="permit" value="Yes"> Yes</label>
         </div>
-        <input type="file" id="permitPhotoInput" accept="image/*" capture="environment" style="display:none;">
-        <img id="permitPhotoPreview" class="doc-photo-preview" alt="Permit preview">
+        <div class="photo-box" style="margin-top:12px;">
+          <button type="button" class="photo-btn" id="permitPhotoTrigger">📷 Permit Photo Capture / Upload (Required)</button>
+          <input type="file" id="permitPhotoInput" accept="image/*" capture="environment" style="display:none;">
+          <img id="permitPhotoPreview" class="doc-photo-preview" alt="Permit preview">
+        </div>
         <div class="doc-photo-hint" id="permitHint"></div>
       </div>
       <div class="field full">
@@ -257,11 +263,12 @@
       <div class="status" id="statusMsg"></div>
     </div>
   </form>
+  <div style="text-align:center;font-size:11px;color:#a89f8a;margin-top:14px;">Form Version: v4 (Permit Photo Compulsory Fix)</div>
 </div>
 
 <script>
   // ====== YAHAN APNA APPS SCRIPT WEB APP URL PASTE KARO ======
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPtRsdUx8vAQxvIhIVSvH-QjtzzrS4O5abRjz01pwOBvqGFHw1GnS7q7ObCHvO9esD/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfeLxQxPYUGFj0x3JBE6-ciaVLe8E1LScZyYz2SMii5EnO7Qv0kLg0aDX4HawTO96W/exec";
   // =============================================================
 
   if (SCRIPT_URL.indexOf("PASTE_YOUR") === 0) {
@@ -363,7 +370,48 @@
 
   const licensePhoto = wireDocPhoto('licenseHai', 'licensePhotoInput', 'licensePhotoPreview', 'licenseHint', 'Yes', 'No');
   const rcPhoto = wireDocPhoto('rcHai', 'rcPhotoInput', 'rcPhotoPreview', 'rcHint', 'Yes', 'No');
-  const permitPhoto = wireDocPhoto('permit', 'permitPhotoInput', 'permitPhotoPreview', 'permitHint', 'Not Expire', 'Expire');
+
+  // ---------- Permit: photo compulsory chahe Yes ho ya No — dedicated button hai, radio pe depend nahi karta ----------
+  function wireButtonPhoto(triggerId, fileInputId, previewId, hintId, defaultLabel) {
+    const trigger = document.getElementById(triggerId);
+    const fileInput = document.getElementById(fileInputId);
+    const preview = document.getElementById(previewId);
+    const hint = document.getElementById(hintId);
+    let base64 = "", fileName = "", mimeType = "";
+
+    trigger.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      trigger.textContent = "⏳ Processing...";
+      try {
+        const dataUrl = await compressImage(file, 1000, 0.7);
+        base64 = dataUrl.split(',')[1];
+        fileName = (file.name || "permit_photo").replace(/\.[^.]+$/, "") + ".jpg";
+        mimeType = "image/jpeg";
+        preview.src = dataUrl;
+        preview.style.display = 'inline-block';
+        hint.textContent = "✅ Photo liya gaya";
+      } catch (err) {
+        hint.textContent = "Photo process nahi ho payi, dobara try karo.";
+      } finally {
+        trigger.textContent = defaultLabel;
+      }
+    });
+
+    return {
+      getData: () => ({ base64, fileName, mimeType }),
+      reset: () => {
+        base64 = ""; fileName = ""; mimeType = "";
+        preview.style.display = 'none';
+        preview.src = "";
+        hint.textContent = "";
+      }
+    };
+  }
+
+  const permitPhoto = wireButtonPhoto('permitPhotoTrigger', 'permitPhotoInput', 'permitPhotoPreview', 'permitHint', '📷 Permit Photo Capture / Upload (Required)');
 
   // ---------- Driver photo (unchanged behaviour) ----------
   const photoTrigger = document.getElementById('photoTrigger');
@@ -401,27 +449,42 @@
     return el ? el.value : "";
   }
 
-  function submitWithRetry(payload, attemptsLeft, timeoutMs) {
+  async function submitWithRetry(payload, attemptsLeft, timeoutMs) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    return fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    })
-    .then(res => { clearTimeout(timer); return res; })
-    .catch(err => {
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
       clearTimeout(timer);
-      if (attemptsLeft > 1) {
-        statusMsg.textContent = "Signal weak, dobara try ho raha hai...";
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error("Server se sahi jawab nahi mila.");
+      }
+
+      if (!data || data.result !== "success") {
+        // Server ne khud bataya ki entry save nahi hui — ye asli failure hai, retry nahi karenge.
+        throw new Error(data && data.message ? data.message : "Entry save nahi ho payi.");
+      }
+
+      return data;
+    } catch (err) {
+      clearTimeout(timer);
+      if (attemptsLeft > 1 && err.name === 'AbortError') {
+        // Sirf timeout/network issue par hi retry karo, server ke definitive "error" par nahi.
+        statusMsg.textContent = "Signal weak, dobara try ho raha hai... (thoda time lagega, 4 photos ja rahi hain)";
         statusMsg.className = "status";
-        return submitWithRetry(payload, attemptsLeft - 1, timeoutMs);
+        return submitWithRetry(payload, attemptsLeft - 1, timeoutMs + 15000);
       }
       throw err;
-    });
+    }
   }
 
   let isSubmitting = false;
@@ -445,6 +508,16 @@
     const licenseData = licensePhoto.getData();
     const rcData = rcPhoto.getData();
     const permitData = permitPhoto.getData();
+
+    if (!permitData.base64) {
+      statusMsg.textContent = "⚠️ Permit ki photo lena zaroori hai (Yes ho ya No, dono me).";
+      statusMsg.className = "status err";
+      document.getElementById('permitPhotoTrigger').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      isSubmitting = false;
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit Entry";
+      return;
+    }
 
     const payload = {
       entryDateTime: document.getElementById('entryDateTime').value,
@@ -473,7 +546,7 @@
       photoMimeType: photoMimeType
     };
 
-    submitWithRetry(payload, 3, 15000)
+    submitWithRetry(payload, 2, 45000)
       .then(() => {
         statusMsg.textContent = "✅ Entry saved! Sheet1 me check karo.";
         statusMsg.className = "status ok";
@@ -486,7 +559,7 @@
         setNowInField();
       })
       .catch(err => {
-        statusMsg.textContent = "❌ Submit fail hua (" + (err.name === 'AbortError' ? 'timeout' : err.message) + "). Internet check karke dobara try karo.";
+        statusMsg.textContent = "❌ Submit fail hua (" + (err.name === 'AbortError' ? 'timeout' : err.message) + "). Entry save NAHI hui — internet check karke dobara try karo.";
         statusMsg.className = "status err";
       })
       .finally(() => {
