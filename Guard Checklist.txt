@@ -74,7 +74,6 @@
     display:block;font-size:12px;font-weight:600;letter-spacing:.04em;
     color:var(--navy);text-transform:uppercase;margin-bottom:6px;
   }
-  label .req{color:var(--err);margin-left:2px;}
   input[type=text], input[type=tel], input[type=datetime-local], textarea, select{
     width:100%;padding:12px;border:1.5px solid var(--line);border-radius:6px;
     font-family:'Inter',sans-serif;font-size:16px;background:#fbfaf7;color:var(--text);
@@ -99,6 +98,12 @@
   .yesno input[type=radio]{width:16px;height:16px;accent-color:var(--navy);margin:0;}
   .yesno label:has(input:checked){background:var(--navy);color:#fff;border-color:var(--navy);}
   .yesno label.no-variant:has(input:checked){background:var(--err);border-color:var(--err);}
+
+  .doc-photo-preview{
+    margin-top:10px;width:100%;max-width:220px;max-height:180px;object-fit:contain;
+    border-radius:8px;border:1.5px solid var(--line);display:none;background:#f4f2ea;
+  }
+  .doc-photo-hint{font-size:11.5px;color:#7a8194;margin-top:6px;}
 
   .photo-box{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;}
   .photo-btn{
@@ -155,35 +160,44 @@
     <div class="section-label">Entry Details</div>
     <div class="grid">
       <div class="field">
-        <label>Entry Date &amp; Time <span class="req">*</span></label>
-        <input type="datetime-local" id="entryDateTime" required>
+        <label>Entry Date &amp; Time</label>
+        <input type="datetime-local" id="entryDateTime">
       </div>
       <div class="field">
-        <label>Vehicle No. <span class="req">*</span></label>
-        <input type="text" id="vehicleNo" placeholder="HR-06-AB-1234" required>
+        <label>Vehicle No.</label>
+        <input type="text" id="vehicleNo" placeholder="HR-06-AB-1234">
       </div>
       <div class="field">
-        <label>Driver Name <span class="req">*</span></label>
-        <input type="text" id="driverName" placeholder="Pura naam" required>
+        <label>Driver Name</label>
+        <input type="text" id="driverName" placeholder="Pura naam">
       </div>
       <div class="field">
-        <label>Driver Mobile No. <span class="req">*</span></label>
-        <input type="tel" id="driverMobile" placeholder="10 digit number" pattern="[0-9]{10}" required>
+        <label>Driver Mobile No.</label>
+        <input type="tel" id="driverMobile" placeholder="10 digit number">
       </div>
+
       <div class="field">
-        <label>License Hai? <span class="req">*</span></label>
+        <label>License Hai?</label>
         <div class="yesno">
-          <label><input type="radio" name="licenseHai" value="Yes" required> Yes</label>
-          <label class="no-variant"><input type="radio" name="licenseHai" value="No"> No</label>
+          <label class="no-variant"><input type="radio" name="licenseHai" value="No" checked> No</label>
+          <label><input type="radio" name="licenseHai" value="Yes"> Yes (Photo)</label>
         </div>
+        <input type="file" id="licensePhotoInput" accept="image/*" capture="environment" style="display:none;">
+        <img id="licensePhotoPreview" class="doc-photo-preview" alt="License preview">
+        <div class="doc-photo-hint" id="licenseHint"></div>
       </div>
+
       <div class="field">
-        <label>RC Hai? <span class="req">*</span></label>
+        <label>RC Hai?</label>
         <div class="yesno">
-          <label><input type="radio" name="rcHai" value="Yes" required> Yes</label>
-          <label class="no-variant"><input type="radio" name="rcHai" value="No"> No</label>
+          <label class="no-variant"><input type="radio" name="rcHai" value="No" checked> No</label>
+          <label><input type="radio" name="rcHai" value="Yes"> Yes (Photo)</label>
         </div>
+        <input type="file" id="rcPhotoInput" accept="image/*" capture="environment" style="display:none;">
+        <img id="rcPhotoPreview" class="doc-photo-preview" alt="RC preview">
+        <div class="doc-photo-hint" id="rcHint"></div>
       </div>
+
       <div class="field">
         <label>Transporter Name</label>
         <input type="text" id="transporterName" placeholder="Company / transporter">
@@ -199,15 +213,17 @@
       </div>
     </div>
 
-    <div class="section-label">Material Info</div>
+    <div class="section-label">Permit &amp; Issue</div>
     <div class="grid">
       <div class="field">
-        <label>Material Name</label>
-        <input type="text" id="materialName" placeholder="Material">
-      </div>
-      <div class="field">
-        <label>Quantity</label>
-        <input type="text" id="quantity" placeholder="e.g. 50 boxes">
+        <label>Permit</label>
+        <div class="yesno">
+          <label class="no-variant"><input type="radio" name="permit" value="Expire" checked> Expire</label>
+          <label><input type="radio" name="permit" value="Not Expire"> Not Expire (Photo)</label>
+        </div>
+        <input type="file" id="permitPhotoInput" accept="image/*" capture="environment" style="display:none;">
+        <img id="permitPhotoPreview" class="doc-photo-preview" alt="Permit preview">
+        <div class="doc-photo-hint" id="permitHint"></div>
       </div>
       <div class="field full">
         <label>Damage / Issue</label>
@@ -218,8 +234,8 @@
     <div class="section-label">Verified By</div>
     <div class="grid">
       <div class="field">
-        <label>Guard Name <span class="req">*</span></label>
-        <input type="text" id="guardName" placeholder="Duty guard ka naam" required>
+        <label>Guard Name</label>
+        <input type="text" id="guardName" placeholder="Duty guard ka naam">
       </div>
       <div class="field">
         <label>Driver Photo</label>
@@ -245,7 +261,7 @@
 
 <script>
   // ====== YAHAN APNA APPS SCRIPT WEB APP URL PASTE KARO ======
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZ6S66tTOx8rj5GpYRYxtyQTP8TSBAmnhqdBS6bgwAH8obHNwy-em0j1cpry0NwR3P/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPtRsdUx8vAQxvIhIVSvH-QjtzzrS4O5abRjz01pwOBvqGFHw1GnS7q7ObCHvO9esD/exec";
   // =============================================================
 
   if (SCRIPT_URL.indexOf("PASTE_YOUR") === 0) {
@@ -264,13 +280,6 @@
     vehicleNoField.value = vehicleNoField.value.toUpperCase();
     vehicleNoField.setSelectionRange(pos, pos);
   });
-
-  const photoTrigger = document.getElementById('photoTrigger');
-  const photoInput = document.getElementById('photoInput');
-  const photoPreview = document.getElementById('photoPreview');
-  let photoBase64 = "", photoName = "", photoMimeType = "";
-
-  photoTrigger.addEventListener('click', () => photoInput.click());
 
   function compressImage(file, maxDimension, quality) {
     return new Promise((resolve, reject) => {
@@ -297,6 +306,72 @@
       reader.readAsDataURL(file);
     });
   }
+
+  // ---------- Generic helper to wire a 2-option radio group + photo-capture ----------
+  // triggerVal = the radio value that opens the camera/file picker (e.g. "Yes" or "Not Expire")
+  // otherVal   = the radio value that clears the captured photo (e.g. "No" or "Expire")
+  function wireDocPhoto(groupName, fileInputId, previewId, hintId, triggerVal, otherVal) {
+    triggerVal = triggerVal || "Yes";
+    otherVal = otherVal || "No";
+    const fileInput = document.getElementById(fileInputId);
+    const preview = document.getElementById(previewId);
+    const hint = document.getElementById(hintId);
+    const radios = document.querySelectorAll('input[name="' + groupName + '"]');
+    let base64 = "", fileName = "", mimeType = "";
+
+    radios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (radio.value === triggerVal && radio.checked) {
+          fileInput.click();
+        }
+        if (radio.value === otherVal && radio.checked) {
+          base64 = ""; fileName = ""; mimeType = "";
+          preview.style.display = 'none';
+          hint.textContent = "";
+        }
+      });
+    });
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      hint.textContent = "⏳ Processing...";
+      try {
+        const dataUrl = await compressImage(file, 1000, 0.7);
+        base64 = dataUrl.split(',')[1];
+        fileName = (file.name || groupName + "_photo").replace(/\.[^.]+$/, "") + ".jpg";
+        mimeType = "image/jpeg";
+        preview.src = dataUrl;
+        preview.style.display = 'inline-block';
+        hint.textContent = "✅ Photo liya gaya";
+      } catch (err) {
+        hint.textContent = "Photo process nahi ho payi, dobara try karo.";
+        // agar photo fail ho jaye to trigger option select rehne do, guard dobara try kar sakta hai
+      }
+    });
+
+    return {
+      getData: () => ({ base64, fileName, mimeType }),
+      reset: () => {
+        base64 = ""; fileName = ""; mimeType = "";
+        preview.style.display = 'none';
+        preview.src = "";
+        hint.textContent = "";
+      }
+    };
+  }
+
+  const licensePhoto = wireDocPhoto('licenseHai', 'licensePhotoInput', 'licensePhotoPreview', 'licenseHint', 'Yes', 'No');
+  const rcPhoto = wireDocPhoto('rcHai', 'rcPhotoInput', 'rcPhotoPreview', 'rcHint', 'Yes', 'No');
+  const permitPhoto = wireDocPhoto('permit', 'permitPhotoInput', 'permitPhotoPreview', 'permitHint', 'Not Expire', 'Expire');
+
+  // ---------- Driver photo (unchanged behaviour) ----------
+  const photoTrigger = document.getElementById('photoTrigger');
+  const photoInput = document.getElementById('photoInput');
+  const photoPreview = document.getElementById('photoPreview');
+  let photoBase64 = "", photoName = "", photoMimeType = "";
+
+  photoTrigger.addEventListener('click', () => photoInput.click());
 
   photoInput.addEventListener('change', async () => {
     const file = photoInput.files[0];
@@ -360,10 +435,6 @@
       statusMsg.className = "status err";
       return;
     }
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
 
     isSubmitting = true;
     submitBtn.disabled = true;
@@ -371,17 +442,29 @@
     statusMsg.textContent = "";
     statusMsg.className = "status";
 
+    const licenseData = licensePhoto.getData();
+    const rcData = rcPhoto.getData();
+    const permitData = permitPhoto.getData();
+
     const payload = {
       entryDateTime: document.getElementById('entryDateTime').value,
       vehicleNo: document.getElementById('vehicleNo').value.trim().toUpperCase(),
       driverName: document.getElementById('driverName').value.trim(),
       driverMobile: document.getElementById('driverMobile').value.trim(),
       licenseHai: getRadioValue('licenseHai'),
+      licensePhotoBase64: licenseData.base64,
+      licensePhotoName: licenseData.fileName,
+      licensePhotoMimeType: licenseData.mimeType,
       rcHai: getRadioValue('rcHai'),
+      rcPhotoBase64: rcData.base64,
+      rcPhotoName: rcData.fileName,
+      rcPhotoMimeType: rcData.mimeType,
       transporterName: document.getElementById('transporterName').value.trim(),
       purpose: document.getElementById('purpose').value,
-      materialName: document.getElementById('materialName').value.trim(),
-      quantity: document.getElementById('quantity').value.trim(),
+      permit: getRadioValue('permit'),
+      permitPhotoBase64: permitData.base64,
+      permitPhotoName: permitData.fileName,
+      permitPhotoMimeType: permitData.mimeType,
       damageIssue: document.getElementById('damageIssue').value.trim(),
       guardName: document.getElementById('guardName').value.trim(),
       remarks: document.getElementById('remarks').value.trim(),
@@ -397,6 +480,9 @@
         form.reset();
         photoPreview.style.display = 'none';
         photoBase64 = ""; photoName = ""; photoMimeType = "";
+        licensePhoto.reset();
+        rcPhoto.reset();
+        permitPhoto.reset();
         setNowInField();
       })
       .catch(err => {
