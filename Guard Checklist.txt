@@ -225,7 +225,7 @@
           <label><input type="radio" name="permit" value="Yes"> Yes</label>
         </div>
         <div class="photo-box" style="margin-top:12px;">
-          <button type="button" class="photo-btn" id="permitPhotoTrigger">📷 Permit Photo Capture / Upload (Required)</button>
+          <button type="button" class="photo-btn" id="permitPhotoTrigger">📷 Permit Photo Capture / Upload (Optional)</button>
           <input type="file" id="permitPhotoInput" accept="image/*" capture="environment" style="display:none;">
           <img id="permitPhotoPreview" class="doc-photo-preview" alt="Permit preview">
         </div>
@@ -263,7 +263,7 @@
       <div class="status" id="statusMsg"></div>
     </div>
   </form>
-  <div style="text-align:center;font-size:11px;color:#a89f8a;margin-top:14px;">Form Version: v4 (Permit Photo Compulsory Fix)</div>
+  <div style="text-align:center;font-size:11px;color:#a89f8a;margin-top:14px;">Form Version: v5 (Permit Photo Optional)</div>
 </div>
 
 <script>
@@ -371,7 +371,7 @@
   const licensePhoto = wireDocPhoto('licenseHai', 'licensePhotoInput', 'licensePhotoPreview', 'licenseHint', 'Yes', 'No');
   const rcPhoto = wireDocPhoto('rcHai', 'rcPhotoInput', 'rcPhotoPreview', 'rcHint', 'Yes', 'No');
 
-  // ---------- Permit: photo compulsory chahe Yes ho ya No — dedicated button hai, radio pe depend nahi karta ----------
+  // ---------- Permit: photo OPTIONAL — agar guard photo le leta hai to save hoga, warna bina photo ke bhi submit ho jayega ----------
   function wireButtonPhoto(triggerId, fileInputId, previewId, hintId, defaultLabel) {
     const trigger = document.getElementById(triggerId);
     const fileInput = document.getElementById(fileInputId);
@@ -411,7 +411,7 @@
     };
   }
 
-  const permitPhoto = wireButtonPhoto('permitPhotoTrigger', 'permitPhotoInput', 'permitPhotoPreview', 'permitHint', '📷 Permit Photo Capture / Upload (Required)');
+  const permitPhoto = wireButtonPhoto('permitPhotoTrigger', 'permitPhotoInput', 'permitPhotoPreview', 'permitHint', '📷 Permit Photo Capture / Upload (Optional)');
 
   // ---------- Driver photo (unchanged behaviour) ----------
   const photoTrigger = document.getElementById('photoTrigger');
@@ -509,15 +509,7 @@
     const rcData = rcPhoto.getData();
     const permitData = permitPhoto.getData();
 
-    if (!permitData.base64) {
-      statusMsg.textContent = "⚠️ Permit ki photo lena zaroori hai (Yes ho ya No, dono me).";
-      statusMsg.className = "status err";
-      document.getElementById('permitPhotoTrigger').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      isSubmitting = false;
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Submit Entry";
-      return;
-    }
+    // Permit photo ab optional hai — agar li gayi hai to bhej do, warna bina check ke aage badho.
 
     const payload = {
       entryDateTime: document.getElementById('entryDateTime').value,
